@@ -206,6 +206,7 @@ class RallyEnv(gym.Env):
             {
                 "x": state.x,
                 "y": state.y,
+                "theta": state.theta,
                 "t": self.time,
                 "s": self.projection.s,
                 "speed": state.speed,

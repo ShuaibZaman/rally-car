@@ -89,15 +89,20 @@ def resolve_seeds(args: argparse.Namespace) -> list[int]:
 def main(argv: list[str] | None = None) -> None:
     args = parse_args(argv)
     seeds = resolve_seeds(args)
+    parameters = None
     if args.classical:
         rows, summary = evaluate_classical(seeds, args.episodes, args.preset, args.reward, args.episode_steps)
         label = "classical"
     else:
+        from stable_baselines3 import PPO
+
+        loaded = PPO.load(args.checkpoint, device="cpu")
+        parameters = int(sum(param.numel() for param in loaded.policy.parameters()))
         rows, summary = evaluate_checkpoint(
             Path(args.checkpoint), seeds, args.episodes, args.preset, args.reward, args.episode_steps
         )
-        label = "ppo_smoke"
-    payload = {"label": label, "seeds": seeds, "episodes": rows, "summary": summary}
+        label = Path(args.out).stem.removeprefix("eval_") if args.out else Path(args.checkpoint).stem
+    payload = {"label": label, "seeds": seeds, "episodes": rows, "summary": summary, "parameters": parameters}
     out = Path(args.out) if args.out else Path("data/results") / f"eval_{label}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(payload, indent=2), encoding="utf-8")

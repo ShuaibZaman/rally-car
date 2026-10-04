@@ -56,6 +56,26 @@ class MetricTests(unittest.TestCase):
         notes = describe_trace(samples)
         self.assertIn("Does not brake before corners.", notes)
 
+    def test_corner_markers_follow_the_trace(self) -> None:
+        from training.metrics import corner_markers
+
+        samples = [
+            {
+                "x": float(index),
+                "y": 0.0,
+                "s": float(index * 5),
+                "curvature_ahead": 0.05,
+                "brake": 0.0,
+                "speed": 18.0,
+                "steer": 0.0,
+                "collision": False,
+            }
+            for index in range(12)
+        ]
+        markers = corner_markers(samples)
+        self.assertTrue(markers)
+        self.assertEqual(markers[0]["text"], "no brake")
+
     def test_histogram_bins(self) -> None:
         hist = crash_histogram([{"s": 10.0, "collision": True, "off_track": False}], length=100.0, bins=10)
         self.assertEqual(sum(hist), 1.0)

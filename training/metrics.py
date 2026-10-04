@@ -108,3 +108,31 @@ def describe_trace(samples: list[dict]) -> list[str]:
     if not notes:
         notes.append("No strong qualitative pattern in this trace.")
     return notes
+
+
+def corner_markers(samples: list[dict], limit: int = 3) -> list[dict]:
+    """Map positions for notes the trace actually supports. Skip samples with no coordinates."""
+    notes = set(describe_trace(samples))
+    located = [sample for sample in samples if "x" in sample and "y" in sample]
+    if not located:
+        return []
+    markers: list[dict] = []
+
+    def spaced(candidates: list[dict], text: str) -> None:
+        last_s = -1e9
+        for sample in candidates:
+            arc = float(sample.get("s", sample["x"]))
+            if abs(arc - last_s) < 140.0:
+                continue
+            markers.append({"x": float(sample["x"]), "y": float(sample["y"]), "text": text})
+            last_s = arc
+            if len(markers) >= limit:
+                return
+
+    if "Brakes before corners." in notes:
+        spaced([sample for sample in located if sample.get("curvature_ahead", 0.0) > 0.02 and sample.get("brake", 0.0) > 0.25], "brake")
+    elif "Does not brake before corners." in notes:
+        spaced([sample for sample in located if sample.get("curvature_ahead", 0.0) > 0.02 and sample.get("brake", 0.0) < 0.05], "no brake")
+    if len(markers) < limit and "The trace includes a collision." in notes:
+        spaced([sample for sample in located if sample.get("collision")], "crash")
+    return markers[:limit]

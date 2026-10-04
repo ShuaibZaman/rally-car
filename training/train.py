@@ -52,7 +52,28 @@ def _loss_snapshot(model) -> dict[str, float]:
     return {key: float(value) for key, value in values.items() if "loss" in key}
 
 
-def train(experiment: ExperimentConfig, episode_steps: int, device: str, checkpoint_dir: Path) -> dict:
+class LadderCallback(BaseCallback):
+    """Save named checkpoints as the step budget crosses early, mid, and late."""
+
+    def __init__(self, checkpoint_dir: Path, total_steps: int) -> None:
+        super().__init__()
+        self.checkpoint_dir = checkpoint_dir
+        self.marks = {
+            max(1, int(total_steps * 0.25)): "early",
+            max(1, int(total_steps * 0.50)): "mid",
+            total_steps: "late",
+        }
+        self.saved: set[str] = set()
+
+    def _on_step(self) -> bool:
+        reached = [name for step, name in self.marks.items() if self.num_timesteps >= step and name not in self.saved]
+        for name in reached:
+            self.model.save(str(self.checkpoint_dir / name))
+            self.saved.add(name)
+        return True
+
+
+def train(experiment: ExperimentConfig, episode_steps: int, device: str, checkpoint_dir: Path, ladder: bool = False) -> dict:
     if experiment.observation == "vision":
         raise RuntimeError("Vision training is scaffolded. Pass --allow-vision only after you mean to run it.")
     env_config = EnvConfig(
@@ -67,6 +88,7 @@ def train(experiment: ExperimentConfig, episode_steps: int, device: str, checkpo
         return Monitor(RallyEnv(env_config))
 
     vec = DummyVecEnv([_factory])
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
     n_steps = min(1024, max(64, experiment.max_steps))
     model = build_model(
         experiment.algorithm,
@@ -79,13 +101,18 @@ def train(experiment: ExperimentConfig, episode_steps: int, device: str, checkpo
         n_steps=n_steps,
     )
     history = HistoryCallback()
-    model.learn(total_timesteps=experiment.max_steps, callback=history, progress_bar=False)
+    callbacks = [history]
+    if ladder:
+        callbacks.append(LadderCallback(checkpoint_dir, experiment.max_steps))
+    model.learn(total_timesteps=experiment.max_steps, callback=callbacks, progress_bar=False)
     history.capture_loss()
+    if ladder:
+        model.save(str(checkpoint_dir / "late"))
     parameters = int(sum(param.numel() for param in model.policy.parameters()))
     losses = _loss_snapshot(model)
-    checkpoint_dir.mkdir(parents=True, exist_ok=True)
-    zip_path = checkpoint_dir / "ppo_smoke.zip"
-    model.save(str(checkpoint_dir / "ppo_smoke"))
+    zip_path = checkpoint_dir / ("late.zip" if ladder else "ppo_smoke.zip")
+    if not ladder:
+        model.save(str(checkpoint_dir / "ppo_smoke"))
     bundle = {
         "experiment": experiment.as_dict(),
         "parameters": parameters,
@@ -98,7 +125,7 @@ def train(experiment: ExperimentConfig, episode_steps: int, device: str, checkpo
     }
     step_name = f"episode_{experiment.max_steps:06d}.pt"
     torch.save({"policy": model.policy.state_dict(), **bundle}, checkpoint_dir / step_name)
-    (checkpoint_dir / "ppo_smoke.json").write_text(json.dumps(bundle, indent=2), encoding="utf-8")
+    (checkpoint_dir / ("ladder.json" if ladder else "ppo_smoke.json")).write_text(json.dumps(bundle, indent=2), encoding="utf-8")
     vec.close()
     return bundle
 
@@ -116,6 +143,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--allow-vision", action="store_true")
     parser.add_argument("--algorithm", default="PPO")
     parser.add_argument("--checkpoint-dir", default="training/checkpoints")
+    parser.add_argument("--device", default="")
+    parser.add_argument("--ladder", action="store_true")
     return parser.parse_args(argv)
 
 
@@ -126,7 +155,12 @@ def main(argv: list[str] | None = None) -> None:
     from agents.policies.mlp import trunk_parameter_count
     from environment.sensors import OBS_DIM
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    if args.device:
+        device = args.device
+    elif args.ladder:
+        device = "cpu"
+    else:
+        device = "cuda" if torch.cuda.is_available() else "cpu"
     experiment = ExperimentConfig(
         algorithm=args.algorithm,
         architecture="MLP2",
@@ -143,7 +177,7 @@ def main(argv: list[str] | None = None) -> None:
         notes="Smoke run. A few thousand steps is not a trained racing policy.",
         trunk_parameters=trunk_parameter_count(OBS_DIM, [128, 128], 3),
     )
-    bundle = train(experiment, args.episode_steps, device, Path(args.checkpoint_dir))
+    bundle = train(experiment, args.episode_steps, device, Path(args.checkpoint_dir), ladder=args.ladder)
     results = Path("data/results")
     results.mkdir(parents=True, exist_ok=True)
     (results / "ppo_smoke_train.json").write_text(json.dumps(bundle, indent=2), encoding="utf-8")
