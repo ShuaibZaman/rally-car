@@ -1,0 +1,19 @@
+{
+  "reward": "A",
+  "index": 1,
+  "notes": "Progress only. Off-track driving still scores. Reward-hacking fixture.",
+  "weights": {
+    "progress": 1.0,
+    "off_track": 0.0,
+    "collision": 0.0,
+    "steering": 0.0,
+    "braking": 0.0,
+    "time": 0.0,
+    "lap_bonus": 0.0,
+    "centering": 0.0,
+    "racing_line": 0.0,
+    "speed": 0.0,
+    "terminate_off_track": false,
+    "terminate_collision": false
+  }
+}

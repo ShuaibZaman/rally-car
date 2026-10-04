@@ -1,0 +1,24 @@
+{
+  "algorithm": "LSTM",
+  "architecture": "MLP_LSTM",
+  "hidden": [
+    128,
+    128
+  ],
+  "observation": "sensors",
+  "reward": "C",
+  "optimizer": "Adam",
+  "learning_rate": 0.0003,
+  "entropy_coef": 0.01,
+  "train_seed": 42,
+  "env_seed": 42,
+  "track_seed": 1000000,
+  "split": "train",
+  "preset": "easy",
+  "max_steps": 4096,
+  "trunk_parameters": 20099,
+  "notes": "Recurrent policy via sb3-contrib. Not part of the smoke run.",
+  "experiment_id": "LSTM_MLP_LSTM_REWARD3_SEED42",
+  "name": "memory_lstm",
+  "train": false
+}

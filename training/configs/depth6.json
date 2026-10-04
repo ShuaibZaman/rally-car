@@ -1,0 +1,28 @@
+{
+  "algorithm": "PPO",
+  "architecture": "depth6",
+  "hidden": [
+    38,
+    38,
+    38,
+    38,
+    38,
+    38
+  ],
+  "observation": "sensors",
+  "reward": "C",
+  "optimizer": "Adam",
+  "learning_rate": 0.0003,
+  "entropy_coef": 0.01,
+  "train_seed": 42,
+  "env_seed": 42,
+  "track_seed": 1000000,
+  "split": "train",
+  "preset": "easy",
+  "max_steps": 4096,
+  "trunk_parameters": 8477,
+  "notes": "Depth comparison at approximately fixed trunk size.",
+  "experiment_id": "PPO_depth6_REWARD3_SEED42",
+  "name": "depth6",
+  "train": false
+}

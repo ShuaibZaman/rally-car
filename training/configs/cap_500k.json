@@ -1,0 +1,24 @@
+{
+  "algorithm": "PPO",
+  "architecture": "cap_500k",
+  "hidden": [
+    700,
+    700
+  ],
+  "observation": "sensors",
+  "reward": "C",
+  "optimizer": "Adam",
+  "learning_rate": 0.0003,
+  "entropy_coef": 0.01,
+  "train_seed": 42,
+  "env_seed": 42,
+  "track_seed": 1000000,
+  "split": "train",
+  "preset": "easy",
+  "max_steps": 4096,
+  "trunk_parameters": 510303,
+  "notes": "Capacity ladder. Defined, not trained.",
+  "experiment_id": "PPO_cap_500k_REWARD3_SEED42",
+  "name": "cap_500k",
+  "train": false
+}

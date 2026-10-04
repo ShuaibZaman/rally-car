@@ -1,0 +1,19 @@
+{
+  "reward": "C",
+  "index": 3,
+  "notes": "Racing: progress, collision, time, off-track, plus a lap bonus.",
+  "weights": {
+    "progress": 1.0,
+    "off_track": 1.5,
+    "collision": 10.0,
+    "steering": 0.0,
+    "braking": 0.0,
+    "time": 0.4,
+    "lap_bonus": 15.0,
+    "centering": 0.0,
+    "racing_line": 0.0,
+    "speed": 0.0,
+    "terminate_off_track": false,
+    "terminate_collision": true
+  }
+}

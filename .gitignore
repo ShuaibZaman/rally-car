@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+training/checkpoints/*.zip
+training/checkpoints/*.pt
+training/checkpoints/*.json
+data/results/*
+!data/results/.gitkeep
+data/trajectories/*
+!data/trajectories/.gitkeep
+*.zip

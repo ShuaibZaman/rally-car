@@ -1,0 +1,24 @@
+{
+  "algorithm": "PPO",
+  "architecture": "MLP2",
+  "hidden": [
+    128,
+    128
+  ],
+  "observation": "sensors",
+  "reward": "A",
+  "optimizer": "Adam",
+  "learning_rate": 0.0003,
+  "entropy_coef": 0.01,
+  "train_seed": 42,
+  "env_seed": 42,
+  "track_seed": 1000000,
+  "split": "train",
+  "preset": "easy",
+  "max_steps": 4096,
+  "trunk_parameters": 20099,
+  "notes": "Reward comparison. Same network budget.",
+  "experiment_id": "PPO_MLP2_REWARD1_SEED42",
+  "name": "reward_A",
+  "train": false
+}

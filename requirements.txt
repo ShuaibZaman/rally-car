@@ -1,0 +1,8 @@
+# Torch is installed separately from the PyTorch CUDA index.
+# See README.md. Do not add torch here or pip may pull a CPU wheel.
+pygame>=2.5
+numpy>=1.26
+gymnasium>=1.0
+stable-baselines3>=2.4
+sb3-contrib>=2.4
+matplotlib>=3.8
