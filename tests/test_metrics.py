@@ -76,6 +76,31 @@ class MetricTests(unittest.TestCase):
         self.assertTrue(markers)
         self.assertEqual(markers[0]["text"], "no brake")
 
+    def test_corner_markers_space_by_path_not_world_x(self) -> None:
+        from training.metrics import corner_markers
+
+        # Same x spacing but large arc gaps along y — should allow multiple markers without "s".
+        samples = [
+            {
+                "x": 0.0,
+                "y": float(index * 200),
+                "curvature_ahead": 0.05,
+                "brake": 0.0,
+                "speed": 18.0,
+                "steer": 0.0,
+                "collision": False,
+            }
+            for index in range(12)
+        ]
+        markers = corner_markers(samples, limit=3)
+        self.assertEqual(len(markers), 3)
+
+    def test_ladder_marks_keep_all_names_for_tiny_budgets(self) -> None:
+        from training.train import ladder_marks
+
+        self.assertEqual(ladder_marks(2), [(1, "early"), (1, "mid"), (2, "late")])
+        self.assertEqual(ladder_marks(1), [(1, "early"), (1, "mid"), (1, "late")])
+
     def test_histogram_bins(self) -> None:
         hist = crash_histogram([{"s": 10.0, "collision": True, "off_track": False}], length=100.0, bins=10)
         self.assertEqual(sum(hist), 1.0)

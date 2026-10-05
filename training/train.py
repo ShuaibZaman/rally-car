@@ -52,21 +52,28 @@ def _loss_snapshot(model) -> dict[str, float]:
     return {key: float(value) for key, value in values.items() if "loss" in key}
 
 
+def ladder_marks(total_steps: int) -> list[tuple[int, str]]:
+    """Step thresholds for early, mid, and late checkpoints (order preserved; steps may repeat)."""
+    if total_steps < 1:
+        return []
+    return [
+        (max(1, int(total_steps * 0.25)), "early"),
+        (max(1, int(total_steps * 0.50)), "mid"),
+        (total_steps, "late"),
+    ]
+
+
 class LadderCallback(BaseCallback):
     """Save named checkpoints as the step budget crosses early, mid, and late."""
 
     def __init__(self, checkpoint_dir: Path, total_steps: int) -> None:
         super().__init__()
         self.checkpoint_dir = checkpoint_dir
-        self.marks = {
-            max(1, int(total_steps * 0.25)): "early",
-            max(1, int(total_steps * 0.50)): "mid",
-            total_steps: "late",
-        }
+        self.marks = ladder_marks(total_steps)
         self.saved: set[str] = set()
 
     def _on_step(self) -> bool:
-        reached = [name for step, name in self.marks.items() if self.num_timesteps >= step and name not in self.saved]
+        reached = [name for step, name in self.marks if self.num_timesteps >= step and name not in self.saved]
         for name in reached:
             self.model.save(str(self.checkpoint_dir / name))
             self.saved.add(name)

@@ -120,8 +120,18 @@ def corner_markers(samples: list[dict], limit: int = 3) -> list[dict]:
 
     def spaced(candidates: list[dict], text: str) -> None:
         last_s = -1e9
+        prev_x: float | None = None
+        prev_y: float | None = None
+        run_arc = 0.0
         for sample in candidates:
-            arc = float(sample.get("s", sample["x"]))
+            if "s" in sample:
+                arc = float(sample["s"])
+            else:
+                x, y = float(sample["x"]), float(sample["y"])
+                if prev_x is not None:
+                    run_arc += math.hypot(x - prev_x, y - prev_y)
+                arc = run_arc
+                prev_x, prev_y = x, y
             if abs(arc - last_s) < 140.0:
                 continue
             markers.append({"x": float(sample["x"]), "y": float(sample["y"]), "text": text})
